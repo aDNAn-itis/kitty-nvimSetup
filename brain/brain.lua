@@ -14,6 +14,21 @@ vim.keymap.set('n', '<leader>as', function()
     })
 end, { desc = "Archive Kitty Chat" })
 
+-- :BrainRoam: Open the project's archive folder to read past conversations.
+vim.api.nvim_create_user_command('BrainRoam', function()
+    local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
+    local archive_dir = vim.fn.expand("~/.brain/archives/") .. project_name
+    
+    -- Ensure the directory exists before trying to open it
+    if vim.fn.isdirectory(archive_dir) == 0 then
+        vim.fn.mkdir(archive_dir, "p")
+    end
+    
+    vim.notify("Opening Brain Vault for: " .. project_name, vim.log.levels.INFO)
+    -- This opens Neovim's file explorer right in the archives folder!
+    vim.cmd("edit " .. archive_dir)
+end, { desc = "Browse past AI conversations" })
+
 -- :BrainSearch <keyword>: Compile context based on the keyword.
 vim.api.nvim_create_user_command('BrainSearch', function(opts)
     local keyword = opts.args
