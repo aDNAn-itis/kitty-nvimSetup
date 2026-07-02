@@ -86,12 +86,45 @@ EOF
 fi
 
 # ------------------------------------------------------------------------------
-# STEP 3: Final Instructions
+# STEP 3: Second Brain Context Vault Setup
+# ------------------------------------------------------------------------------
+# Set up the Second Brain Context Vault.
+# Creates a permanent memory bank for AI chats.
+log_info "Setting up Second Brain Context Vault..."
+
+# Create storage directories in the home folder.
+mkdir -p ~/.brain/scripts
+mkdir -p ~/.brain/archives
+
+# --- 1. The Archiver & Context Scripts ---
+# Copy the Second Brain scripts into the user's home directory.
+cp ./brain/archive_chat.sh ~/.brain/scripts/
+cp ./brain/build_context.sh ~/.brain/scripts/
+
+# Apply execution permissions to scripts.
+chmod +x ~/.brain/scripts/archive_chat.sh ~/.brain/scripts/build_context.sh
+log_success "Created the memory scripts in ~/.brain/scripts"
+
+# --- 2. The Neovim Keymaps ---
+# Inject Second Brain keybindings into Neovim configuration.
+log_info "Adding Second Brain keybindings to Neovim..."
+if [ -f ~/.config/nvim/lua/config/keymaps.lua ] && grep -q "SECOND BRAIN BRIDGE" ~/.config/nvim/lua/config/keymaps.lua; then
+    echo -e "${YELLOW}[SKIP]${NC} Second Brain keymaps already exist."
+else
+    cat ./brain/brain.lua >> ~/.config/nvim/lua/config/keymaps.lua
+    log_success "Second Brain Neovim keymaps injected."
+fi
+
+# ------------------------------------------------------------------------------
+# STEP 4: Final Instructions
 # ------------------------------------------------------------------------------
 echo "------------------------------------------------------------------------------"
-log_success "The AI Bridge is fully operational!"
+log_success "The AI Bridge & Second Brain Vault are fully operational!"
 echo "To activate:"
 echo "1. Completely close Kitty and reopen it (to spawn the new socket)."
 echo "2. Press Ctrl+Alt+c to open your Gemini split pane."
-echo "3. In Neovim, press [Space] + a + i to magically send your file to the AI."
+echo "3. Neovim: [Space] + a + i (Sync current file to AI)"
+echo "4. Neovim: [Space] + a + s (Archive AI chat to ~/.brain)"
+echo "5. Neovim: :BrainSearch <keyword> (Compile past context)"
+echo "6. Neovim: [Space] + a + c (Inject compiled context to AI)"
 echo "=============================================================================="
