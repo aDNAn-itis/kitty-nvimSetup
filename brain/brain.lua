@@ -1,62 +1,37 @@
--- ~/.config/nvim/lua/custom/brain.lua
-local M = {}
+-- ==============================================================================
+-- SECOND BRAIN BRIDGE
+-- ==============================================================================
+local scripts_dir = vim.fn.expand("~/.brain/scripts")
 
-function M.setup()
-    local scripts_dir = vim.fn.expand("~/.brain/scripts")
-
-    -- 1. Archive Session
-    vim.keymap.set('n', '<leader>as', function()
-        vim.notify("Archiving chat...", vim.log.levels.INFO)
-        vim.fn.jobstart({"bash", scripts_dir .. "/archive_chat.sh"}, {
-            on_exit = function(_, exit_code, _)
-                if exit_code == 0 then
-                    vim.notify("Chat successfully archived!", vim.log.levels.INFO)
-                else
-                    vim.notify("Failed to archive chat.", vim.log.levels.ERROR)
-                end
-            end
-        })
-    end, { desc = "Archive Kitty Chat Session" })
-
-    -- 2. User Command :BrainSearch
-    vim.api.nvim_create_user_command('BrainSearch', function(opts)
-        local keyword = opts.args
-        if keyword == "" then
-            vim.notify("Please provide a search keyword.", vim.log.levels.WARN)
-            return
+-- <leader>as: Execute the archiver script.
+vim.keymap.set('n', '<leader>as', function()
+    local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
+    vim.notify("Archiving chat for project: " .. project_name, vim.log.levels.INFO)
+    vim.fn.jobstart({"bash", scripts_dir .. "/archive_chat.sh", project_name}, {
+        on_exit = function(_, exit_code, _)
+            if exit_code == 0 then vim.notify("Chat archived!", vim.log.levels.INFO) end
         end
+    })
+end, { desc = "Archive Kitty Chat" })
 
-        vim.notify("Building context for: " .. keyword, vim.log.levels.INFO)
-        vim.fn.jobstart({"bash", scripts_dir .. "/build_context.sh", keyword}, {
-            on_exit = function(_, exit_code, _)
-                if exit_code == 0 then
-                    vim.notify("Context built successfully!", vim.log.levels.INFO)
-                else
-                    vim.notify("Failed to build context.", vim.log.levels.ERROR)
-                end
-            end
-        })
-    end, { nargs = 1, desc = "Search brain archives and compile context" })
+-- :BrainSearch <keyword>: Compile context based on the keyword.
+vim.api.nvim_create_user_command('BrainSearch', function(opts)
+    local keyword = opts.args
+    local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
+    vim.notify("Building context for: " .. keyword, vim.log.levels.INFO)
+    vim.fn.jobstart({"bash", scripts_dir .. "/build_context.sh", project_name, keyword}, {
+        on_exit = function(_, exit_code, _)
+            if exit_code == 0 then vim.notify("Context built!", vim.log.levels.INFO) end
+        end
+    })
+end, { nargs = 1, desc = "Search brain archives" })
 
-    -- 3. Inject Context
-    vim.keymap.set('n', '<leader>ac', function()
-        -- Execute kitty send-text non-blockingly
-        local cmd = {
-            "kitty", "@", "--to", "unix:/tmp/kitty_socket",
-            "send-text", "--match", "neighbor:right",
-            "/read ~/.brain/active_context.md\r"
-        }
-        
-        vim.fn.jobstart(cmd, {
-            on_exit = function(_, exit_code, _)
-                if exit_code == 0 then
-                    vim.notify("Context injected into AI pane!", vim.log.levels.INFO)
-                else
-                    vim.notify("Failed to inject context.", vim.log.levels.ERROR)
-                end
-            end
-        })
-    end, { desc = "Inject Brain Context to AI Pane" })
-end
-
-return M
+-- <leader>ac: Inject the compiled context file into the AI pane.
+vim.keymap.set('n', '<leader>ac', function()
+    local cmd = { "kitty", "@", "--to", "unix:/tmp/kitty_socket", "send-text", "--match", "neighbor:right", "/read ~/.brain/active_context.md\\r" }
+    vim.fn.jobstart(cmd, {
+        on_exit = function(_, exit_code, _)
+            if exit_code == 0 then vim.notify("Context injected!", vim.log.levels.INFO) end
+        end
+    })
+end, { desc = "Inject Brain Context" })
