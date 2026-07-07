@@ -100,9 +100,10 @@ mkdir -p ~/.brain/archives
 # Copy the Second Brain scripts into the user's home directory.
 cp ./brain/archive_chat.sh ~/.brain/scripts/
 cp ./brain/build_context.sh ~/.brain/scripts/
+cp ./brain/import_web_vault.sh ~/.brain/scripts/
 
 # Apply execution permissions to scripts.
-chmod +x ~/.brain/scripts/archive_chat.sh ~/.brain/scripts/build_context.sh
+chmod +x ~/.brain/scripts/archive_chat.sh ~/.brain/scripts/build_context.sh ~/.brain/scripts/import_web_vault.sh
 log_success "Created the memory scripts in ~/.brain/scripts"
 
 # --- 2. The Neovim Keymaps ---
